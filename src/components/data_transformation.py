@@ -40,12 +40,12 @@ class DataTransformation:
 
         try:
 
-            # Automatically identify numerical columns
+            # Numerical columns
             numerical_columns = X_train.select_dtypes(
                 include=["int64", "float64"]
             ).columns.tolist()
 
-            # Automatically identify categorical columns
+            # Categorical columns
             categorical_columns = X_train.select_dtypes(
                 include=["object", "string", "category"]
             ).columns.tolist()
@@ -75,18 +75,19 @@ class DataTransformation:
             # Categorical pipeline
             cat_pipeline = Pipeline(
                 steps=[
-                    (
+                     (
                         "imputer",
                         SimpleImputer(strategy="most_frequent")
                     ),
                     (
                         "one_hot_encoder",
                         OneHotEncoder(
-                            handle_unknown="ignore"
-                        )
-                    )
-                ]
-            )
+                            handle_unknown="ignore",
+                            sparse_output=True
+                         )
+                     )
+                  ]
+                )
 
             # Column transformer
             preprocessor = ColumnTransformer(
@@ -113,7 +114,11 @@ class DataTransformation:
         except Exception as e:
             raise CustomException(e, sys)
 
-    def initiate_data_transformation(self, train_path, test_path):
+    def initiate_data_transformation(
+        self,
+        train_path,
+        test_path
+    ):
 
         try:
 
@@ -203,10 +208,6 @@ class DataTransformation:
                 )
             )
 
-            logging.info(
-                "Applying preprocessing object"
-            )
-
             # Fit ONLY on training data
             X_train_transformed = (
                 preprocessing_obj.fit_transform(
@@ -246,7 +247,7 @@ class DataTransformation:
                 "Feature selection completed successfully"
             )
 
-            # Save preprocessing object
+            # Save preprocessor
             save_object(
                 file_path=(
                     self.data_transformation_config
@@ -255,7 +256,7 @@ class DataTransformation:
                 obj=preprocessing_obj
             )
 
-            # Save feature selector
+            # Save selector
             save_object(
                 file_path=(
                     self.data_transformation_config
@@ -278,6 +279,7 @@ class DataTransformation:
                 f"{X_test_selected.shape}"
             )
 
+            # Return transformed data
             return (
                 X_train_selected,
                 X_test_selected,
