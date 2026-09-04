@@ -1,4 +1,3 @@
-### End To End Machine Learning Project
 # Customer Churn Prediction — End-to-End ML Project
 
 This project predicts whether a telecom customer is likely to churn, based on their
