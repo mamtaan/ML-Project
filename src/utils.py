@@ -4,6 +4,7 @@ import dill
 
 from sklearn.metrics import f1_score
 from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 from src.exception import CustomException
 from src.logger import logging
@@ -54,18 +55,15 @@ def evaluate_models(
                 f"Training {model_name}"
             )
 
-            # Train model
             model.fit(
                 X_train,
                 y_train
             )
 
-            # Prediction
             y_test_pred = model.predict(
                 X_test
             )
 
-            # F1 Score
             test_model_score = f1_score(
                 y_test,
                 y_test_pred
@@ -74,7 +72,6 @@ def evaluate_models(
             report[model_name] = test_model_score
             trained_models[model_name] = model
 
-            # Terminal output
             print("\n" + "=" * 60)
             print(f"Model: {model_name}")
             print(f"F1 Score: {test_model_score:.4f}")
@@ -170,21 +167,17 @@ def tune_random_forest(
             y_train
         )
 
-        # Best model
         best_model = random_search.best_estimator_
 
-        # Prediction
         y_test_pred = best_model.predict(
             X_test
         )
 
-        # F1 Score
         test_model_score = f1_score(
             y_test,
             y_test_pred
         )
 
-        # Terminal output
         print("\n" + "*" * 60)
         print("TUNED RANDOM FOREST")
         print("*" * 60)
@@ -215,4 +208,129 @@ def tune_random_forest(
 
     except Exception as e:
 
+        raise CustomException(e, sys)
+
+
+def tune_gradient_boosting(
+    X_train,
+    y_train,
+    X_test,
+    y_test
+):
+
+    try:
+
+        logging.info(
+            "Starting Gradient Boosting hyperparameter tuning"
+        )
+
+        model = GradientBoostingClassifier(
+            random_state=42
+        )
+
+        params = {
+
+            "n_estimators": [
+                100,
+                200,
+                300
+            ],
+
+            "learning_rate": [
+                0.01,
+                0.05,
+                0.1
+            ],
+
+            "max_depth": [
+                3,
+                5,
+                7
+            ],
+
+            "min_samples_split": [
+                2,
+                5,
+                10
+            ],
+
+            "subsample": [
+                0.7,
+                0.85,
+                1.0
+            ]
+        }
+
+        random_search = RandomizedSearchCV(
+
+            estimator=model,
+
+            param_distributions=params,
+
+            n_iter=10,
+
+            cv=3,
+
+            scoring="f1",
+
+            random_state=42,
+
+            n_jobs=-1
+        )
+
+        random_search.fit(
+            X_train,
+            y_train
+        )
+
+        best_model = random_search.best_estimator_
+
+        y_test_pred = best_model.predict(
+            X_test
+        )
+
+        test_model_score = f1_score(
+            y_test,
+            y_test_pred
+        )
+
+        print("\n" + "*" * 60)
+        print("TUNED GRADIENT BOOSTING")
+        print("*" * 60)
+
+        print(
+            f"F1 Score: "
+            f"{test_model_score:.4f}"
+        )
+
+        print(
+            f"Best Parameters: "
+            f"{random_search.best_params_}"
+        )
+
+        print("*" * 60)
+
+        logging.info(
+            f"Tuned Gradient Boosting F1 Score: "
+            f"{test_model_score:.4f}"
+        )
+
+        logging.info(
+            f"Tuned Gradient Boosting Parameters: "
+            f"{random_search.best_params_}"
+        )
+
+        return best_model, test_model_score
+
+    except Exception as e:
+
+        raise CustomException(e, sys)
+
+
+def load_object(file_path):
+    try:
+        with open(file_path, "rb") as file_obj:
+            return dill.load(file_obj)
+
+    except Exception as e:
         raise CustomException(e, sys)
